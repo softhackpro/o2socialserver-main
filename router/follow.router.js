@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { verifyLogin } from "../middleware/verifyLogin.middleware";
+import { verifyLogin } from "../middleware/verifyLogin.middleware.js";
+import { incrementFollowers, incrementFollowing } from "../controlers/follow.controllers.js";
 
 export const followRouter= new Router();
 
