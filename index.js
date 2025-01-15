@@ -10,8 +10,8 @@ const port = process.env.PORT || 8000;
 const frontendurl = process.env.FRONTEND_URL
 
 const corsOptions = {
-  origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'],
-  // origin: "http://localhost:5173",
+  // origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'],
+  origin: "http://localhost:5173",
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -36,11 +36,13 @@ import authRouter from "./router/auth.router.js";
 import { messageRouter } from "./router/message.router.js";
 import { userRoute } from "./router/user.router.js";
 import postRouter from './router/post.router.js'
+import { followRouter } from "./router/follow.router.js";
 
 app.use("/auth", authRouter);
 app.use("/message", messageRouter);
 app.use("/user", userRoute);
-app.use('/post', postRouter)
+app.use('/post', postRouter);
+app.use('/follow', followRouter);
 
 server.listen(port, () => {
   connectDb();

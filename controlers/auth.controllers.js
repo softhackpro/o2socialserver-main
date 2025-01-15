@@ -160,6 +160,8 @@ export const updateProfile = async (req, res) => {
       updateData.profilePicture = data.profileUrl;
     }
 
+    console.log(updateData);
+
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updateData },

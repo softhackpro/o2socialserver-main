@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: 'www.shoeseller.com'
     },
-    adderess: {
+    address: {
         type: String,
         default: 'New York, USA'
     },
@@ -46,6 +46,14 @@ const UserSchema = new mongoose.Schema({
     },
     longitude: {
         type: String,
+    },
+    followers: {
+        type: Number,
+        default: 0
+    },
+    following: {
+        type: Number,
+        default: 0
     }
 
 }, { timestamps: true });
