@@ -10,8 +10,8 @@ const port = process.env.PORT || 8000;
 const frontendurl = process.env.FRONTEND_URL
 
 const corsOptions = {
-  // origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'],
-  origin: "http://localhost:5173",
+  origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'],
+  // origin: "http://localhost:5173",
   methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],
