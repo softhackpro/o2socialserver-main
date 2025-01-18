@@ -1,4 +1,5 @@
 import { Router } from "express";
+import {fetchfaq, fetchpagenow, fetchheader, getsearchresult, addPost, deletePost, getPosts, updatePost, uploadFile, likePost, dislikePost, getLikes, getprofile, addComment, deleteComment, getComments, savePost, removeFromSaved, getSavedPost } from "../controlers/post.controllers.js";
 import { getsearchresult, addPost, deletePost, getPosts, updatePost, uploadFile, likePost, dislikePost, getLikes, getprofile, addComment, deleteComment, getComments, savePost, removeFromSaved, getSavedPost, getReelsById } from "../controlers/post.controllers.js";
 import { verifyLogin } from "../middleware/verifyLogin.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
@@ -31,5 +32,7 @@ router.delete('/deletesaved', verifyLogin, removeFromSaved)
 router.get('/getSaved', verifyLogin, getSavedPost);
 
 router.get('/getsearchresult', getsearchresult);
-
+router.get('/fetchheader', fetchheader);
+router.get('/fetchfaq', fetchfaq);
+router.get('/fetchpagenow/:id', fetchpagenow);
 export default router;
