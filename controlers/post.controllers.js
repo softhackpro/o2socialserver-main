@@ -149,11 +149,18 @@ export const deletePost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
-        const page = parseInt(req.query.page, 10) || 1;
         const limit = parseInt(req.query.limit, 10) || 3;
-        const skip = (page - 1) * limit;
+        const excludeIds = req.query.excludeIds ? req.query.excludeIds.split(',').map(id => new mongoose.Types.ObjectId(id)) : [];
 
         const posts = await Post.aggregate([
+            {
+                $match: {
+                    _id: { $nin: excludeIds },
+                }
+            },
+            {
+                $sample: { size: limit }
+            },
             {
                 $lookup: {
                     from: "users",
@@ -173,19 +180,8 @@ export const getPosts = async (req, res) => {
                     "user.updatedAt": 0,
                     "user.backgroundCover": 0,
                 },
-            },
-            {
-                $sort: { createdAt: -1 },
-            },
-            {
-                $skip: skip,
-            },
-            {
-                $limit: limit,
-            },
+            }
         ]);
-
-        const totalPosts = await Post.countDocuments();
 
         return res.status(200).json({
             message: "Posts fetched successfully",
@@ -611,6 +607,72 @@ export const getSavedPost = async (req, res) => {
         return res.status(500).json({
             message: "Internal server error",
             error: error.message || 'Something went wrong'
+        });
+    }
+}
+
+export const getReelsById = async (req, res) => {
+    try {
+        const id = req.query?.id;
+        if (!id) {
+            return res.status(400).json({
+                message: "Invalid id provided"
+            })
+        }
+
+        const post = await Post.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(id),
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'user',
+                }
+            },
+            {
+                $unwind: '$user'
+            },
+            {
+                $project: {
+                    _id: 1,
+                    userId: 1,
+                    title: 1,
+                    description: 1,
+                    price: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    user: {
+                        _id: '$user._id',
+                        fullName: '$user.fullName',
+                        profilePicture: '$user.profilePicture',
+                    },
+                    file: 1
+                }
+            }
+        ]);
+
+        if (!post || post.length === 0) {
+            return res.status(404).json({
+                message: "Reels not found",
+            });
+        }
+
+        return res.status(200).json({
+            message: "Reels fetched successfully",
+            post: post[0],
+        });
+
+    } catch (error) {
+        console.log(error);
+
+        return res.status(500).json({
+            error: error.message || 'Something went wrong',
+            message: "Something went wrong"
         });
     }
 }

@@ -36,11 +36,13 @@ import authRouter from "./router/auth.router.js";
 import { messageRouter } from "./router/message.router.js";
 import { userRoute } from "./router/user.router.js";
 import postRouter from './router/post.router.js'
+import { followRouter } from "./router/follow.router.js";
 
 app.use("/auth", authRouter);
 app.use("/message", messageRouter);
 app.use("/user", userRoute);
-app.use('/post', postRouter)
+app.use('/post', postRouter);
+app.use('/follow', followRouter);
 
 server.listen(port, () => {
   connectDb();
