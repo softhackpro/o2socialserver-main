@@ -2,6 +2,8 @@ import cloudinary from "../config/cloudinaryConfig.js";
 import { Likes } from "../models/like.models.js";
 import { Post } from "../models/post.models.js";
 import { User } from "../models/user.models.js";
+import { Gallery } from "../models/gallery.models.js";
+import { Settings } from "../models/settings.js";
 import fs from 'fs'
 import jwt from 'jsonwebtoken'
 import { Comment } from "../models/comments.models.js";
@@ -53,6 +55,43 @@ export const getsearchresult = async (req, res) => {
         res.status(500).json({ message: "An error occurred while fetching posts." });
     }
 };
+
+export const fetchheader = async (req, res) => {
+    try {
+        const value = await Gallery.find({Type: 'add pages'}).select('_id Title');
+        const settin = await Settings.findOne()
+        const data ={value, settin}
+        res.status(200).json(data);
+    } catch (error) {
+        console.error("Error fetching", error);
+        res.status(500).json({ message: "An error occurred while fetching pages." });
+    }
+};
+
+export const fetchfaq = async (req, res) => {
+    try {
+        const value = await Gallery.find({Type: 'add blogs'}).select('_id Title About createdAt');
+        res.status(200).json(value);
+    } catch (error) {
+        console.error("Error fetching", error);
+        res.status(500).json({ message: "An error occurred while fetching pages." });
+    }
+};
+
+export const fetchpagenow = async (req, res) => {
+    const { id: title } = req.params; // Destructure 'id' from req.params
+    try {
+        const value = await Gallery.findOne({ Type: 'add pages', Title: title });
+        if (!value) {
+            return res.status(404).json({ message: "Page not found" }); // Handle case where no match is found
+        }
+        res.status(200).json(value);
+    } catch (error) {
+        console.error("Error fetching page:", error);
+        res.status(500).json({ message: "An error occurred while fetching the page." });
+    }
+};
+
 
 // Update Post
 export const updatePost = async (req, res) => {
