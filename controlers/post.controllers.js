@@ -1,6 +1,7 @@
 import cloudinary from "../config/cloudinaryConfig.js";
 import { Likes } from "../models/like.models.js";
 import { Post } from "../models/post.models.js";
+import { City } from "../models/city.js";
 import { User } from "../models/user.models.js";
 import { Gallery } from "../models/gallery.models.js";
 import { Settings } from "../models/settings.js";
@@ -179,7 +180,7 @@ export const getPosts = async (req, res) => {
                     "user.email": 0,
                     "user.createdAt": 0,
                     "user.updatedAt": 0,
-                    "user.backgroundCover": 0,
+                    "user.backgroundCover": 0, 
                 },
             }
         ]);
@@ -322,6 +323,40 @@ export const getprofile = async (req, res) => {
 
 
         res.status(200).json({ profile, sellerposts }); // Return the profile data
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred", error: error.message });
+    }
+};
+
+export const getcitylist = async (req, res) => {
+    try {
+
+        const value = await City.find();
+
+        if (!value) {
+            return res.status(404).json({ message: "city not found" });
+        }
+
+
+        res.status(200).json({ value });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An error occurred", error: error.message });
+    }
+};
+
+export const getcategory = async (req, res) => {
+    try {
+
+        const value = await Gallery.find({Type: 'category'});
+
+        if (!value) {
+            return res.status(404).json({ message: "category not found" });
+        }
+
+
+        res.status(200).json({ value });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "An error occurred", error: error.message });
