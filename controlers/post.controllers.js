@@ -9,9 +9,10 @@ import fs from 'fs'
 import jwt from 'jsonwebtoken'
 import { Comment } from "../models/comments.models.js";
 import mongoose from "mongoose";
-import { request } from "http";
 import { SavedPost } from "../models/savedpost.model.js";
-import { post } from "./auth.controllers.js";
+import { razorpayInstance } from '../config/razorpayConfig.js'
+import crypto from 'crypto'
+
 
 // Add Post
 export const addPost = async (req, res) => {
@@ -709,5 +710,79 @@ export const getReelsById = async (req, res) => {
             error: error.message || 'Something went wrong',
             message: "Something went wrong"
         });
+    }
+}
+
+export const boostpost = async (req, res) => {
+    const { postId, amount } = req.body;
+
+    try {
+        // First verify if post exists and isn't already boosted
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+        if (post.isBoosted.status) {
+            return res.status(400).json({ error: 'Post is already boosted' });
+        }
+
+        const order = await razorpayInstance.orders.create({
+            amount: amount, // Convert to paisa
+            currency: 'INR',
+            receipt: `boost-${postId}`,
+            notes: {
+                postId: postId
+            }
+        });
+        res.status(201).json({
+            order: order
+        });
+
+    } catch (error) {
+        console.error('Order creation failed:', error);
+        return res.status(500).json({
+            error: 'Failed to create boost order'
+        });
+    }
+}
+
+export const verifyPayment = async (req, res) => {
+    const {
+        razorpay_payment_id,
+        razorpay_order_id,
+        razorpay_signature,
+        postId
+    } = req.body;
+
+    try {
+        const generated_signature = crypto
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .update(razorpay_order_id + '|' + razorpay_payment_id)
+            .digest('hex');
+
+        if (generated_signature === razorpay_signature) {
+
+            const newIsBoosted= {
+                status: true,
+                boostPaymentId: razorpay_payment_id
+            }
+
+            const updatedPost= await Post.findOneAndUpdate(
+                { _id: postId }, 
+                { $set: { isBoosted: newIsBoosted } }, 
+                { new: true }
+            );
+
+            res.status(200).json({
+                message: "Post successfully boosted.",
+                post: updatedPost
+            });
+
+        } else {
+            res.status(400).json({ error: 'Invalid payment signature' });
+        }
+    } catch (error) {
+        console.error('Payment verification failed:', error);
+        res.status(500).json({ error: 'Failed to verify payment' });
     }
 }

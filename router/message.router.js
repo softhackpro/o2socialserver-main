@@ -1,9 +1,13 @@
 
 import { Router } from "express";
-import { getMessages, sendMessage } from "../controlers/sendMessage.controllers.js";
+import { getConversations, getMessages, info, sendMessage } from "../controlers/sendMessage.controllers.js";
 import { verifyLogin } from "../middleware/verifyLogin.middleware.js";
 
-export const messageRouter = new Router();
+const router = new Router();
 
-messageRouter.get('/get', verifyLogin, getMessages)
-messageRouter.post('/send', verifyLogin, sendMessage)
+router.get('/get', verifyLogin, getMessages)
+router.post('/send', verifyLogin, sendMessage)
+router.get('/getee', verifyLogin, getConversations)
+router.get('/info', verifyLogin, info)
+
+export default router
