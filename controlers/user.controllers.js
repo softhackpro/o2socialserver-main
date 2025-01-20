@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/user.models.js";
 
 export const getUserForSideBar = async (req, res) => {
@@ -39,4 +40,53 @@ export const getCurrentUser = async (req, res) => {
             message: error.message
         })
     }
-} 
+}
+
+export const postReview= async (req, res) => {
+    const { id }= req.query;
+    const star= req.body.star;
+    try{
+        console.log(star, id);
+        
+        if(!id || !mongoose.Types.ObjectId.isValid(id)){
+            return res.status(400).json({
+                message: "Invalid request!"
+            });
+        }
+
+        const findUser= await User.findById(id);
+
+        if(!findUser){
+            return res.status(400).json({
+                message:"User not found!"
+            })
+        }
+
+        const updateUser = await User.findOneAndUpdate(
+            { _id: findUser._id },
+            {
+              $inc: {
+                totalStars: star,
+                totalReviews: 1
+              }
+            },
+            {
+              new: true,
+              upsert: false
+            }
+          );
+
+
+        return res.status(201).json({
+            message: "Review Posted Successfully",
+            user: updateUser
+        });
+
+    } catch(error) {
+        console.log(error);
+
+        return res.status(500).json({
+            message:"Something went wrong"
+        })
+    }
+}

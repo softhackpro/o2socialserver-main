@@ -26,6 +26,7 @@ app.use(cors(corsOptions));
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({extended: false}))
 app.get("/", (req, res, next) => {
   console.log(req.params.path);
   next()
@@ -37,6 +38,7 @@ import { messageRouter } from "./router/message.router.js";
 import { userRoute } from "./router/user.router.js";
 import postRouter from './router/post.router.js'
 import { followRouter } from "./router/follow.router.js";
+import exp from "node:constants";
 
 app.use("/auth", authRouter);
 app.use("/message", messageRouter);
