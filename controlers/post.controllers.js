@@ -44,56 +44,98 @@ export const addPost = async (req, res) => {
 
 export const getsearchresult = async (req, res) => {
     try {
-        // Fetch 12 random posts from the SavedPost collection
+        const search = req.query?.search || '';
+        const city = req.query?.city || '';
+        console.log(search, city);
+
+        const matchQuery = {};
+        if (search) {
+            matchQuery.caption = { $regex: search, $options: 'i' };
+        }
+        if (city) {
+            matchQuery.city = { $regex: city, $options: 'i' };
+        }
+
         const randomPosts = await Post.aggregate([
-            { $sample: { size: 12 } } // Get 12 random documents
+            {
+                $match: matchQuery,
+            },
+            {
+                $sample: { size: 12 },
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $unwind: "$user",
+            },
+            {
+                $project: {
+                    "user.password": 0,
+                    "user.email": 0,
+                    "user.createdAt": 0,
+                    "user.updatedAt": 0,
+                    "user.backgroundCover": 0,
+                    "user.occupation": 0,
+                    "user.profilePicture": 0,
+                    "user.website": 0,
+                },
+            }
         ]);
 
-        res.status(200).json(randomPosts); // Send the random posts as a JSON response
+        console.log(randomPosts);
+
+
+        return res.status(200).json(randomPosts);
     } catch (error) {
         console.error("Error fetching random posts:", error);
-        res.status(500).json({ message: "An error occurred while fetching posts." });
+        return res.status(500).json({ message: "An error occurred while fetching posts." });
     }
 };
 
+
 export const fetchheader = async (req, res) => {
     try {
-        const value = await Gallery.find({Type: 'add pages'}).select('_id Title');
+        const value = await Gallery.find({ Type: 'add pages' }).select('_id Title');
         const settin = await Settings.findOne()
-        const data ={value, settin}
-        res.status(200).json(data);
+        const data = { value, settin }
+        return res.status(200).json(data);
     } catch (error) {
         console.error("Error fetching", error);
-        res.status(500).json({ message: "An error occurred while fetching pages." });
+        return res.status(500).json({ message: "An error occurred while fetching pages." });
     }
 };
 
 export const fetchfaq = async (req, res) => {
     try {
-        const value = await Gallery.find({Type: 'add blogs'}).select('_id Title About createdAt');
-        res.status(200).json(value);
+        const value = await Gallery.find({ Type: 'add blogs' }).select('_id Title About createdAt');
+        return res.status(200).json(value);
     } catch (error) {
         console.error("Error fetching", error);
-        res.status(500).json({ message: "An error occurred while fetching pages." });
+        return res.status(500).json({ message: "An error occurred while fetching pages." });
     }
 };
 
 export const fetchpagenow = async (req, res) => {
-    const { id: title } = req.params; // Destructure 'id' from req.params
+    const { id: title } = req.params;
     try {
         const value = await Gallery.findOne({ Type: 'add pages', Title: title });
         if (!value) {
-            return res.status(404).json({ message: "Page not found" }); // Handle case where no match is found
+            return res.status(404).json({ message: "Page not found" });
         }
-        res.status(200).json(value);
+        return res.status(200).json(value);
     } catch (error) {
         console.error("Error fetching page:", error);
-        res.status(500).json({ message: "An error occurred while fetching the page." });
+        return res.status(500).json({ message: "An error occurred while fetching the page." });
     }
 };
 
 
-// Update Post
 export const updatePost = async (req, res) => {
     try {
         const { id } = req.query;
@@ -150,17 +192,23 @@ export const deletePost = async (req, res) => {
 
 export const getPosts = async (req, res) => {
     try {
+        // Limit parameter to control number of posts fetched
         const limit = parseInt(req.query.limit, 10) || 3;
-        const excludeIds = req.query.excludeIds ? req.query.excludeIds.split(',').map(id => new mongoose.Types.ObjectId(id)) : [];
 
+        // Extract excludeIds query parameter (comma-separated list of post IDs to exclude)
+        const excludeIds = req.query.excludeIds
+            ? req.query.excludeIds.split(',').map(id => new mongoose.Types.ObjectId(id))
+            : [];
+
+        // Fetch posts, excluding the ones in excludeIds and ensuring they are unique
         const posts = await Post.aggregate([
             {
                 $match: {
-                    _id: { $nin: excludeIds },
+                    _id: { $nin: excludeIds }, // Exclude posts that have already been sent
                 }
             },
             {
-                $sample: { size: limit }
+                $sample: { size: limit } // Randomly sample the required number of posts
             },
             {
                 $lookup: {
@@ -171,11 +219,11 @@ export const getPosts = async (req, res) => {
                 },
             },
             {
-                $unwind: "$user",
+                $unwind: "$user", // Flatten user data
             },
             {
                 $project: {
-                    "user.password": 0,
+                    "user.password": 0, // Exclude sensitive fields
                     "user.email": 0,
                     "user.createdAt": 0,
                     "user.updatedAt": 0,
@@ -184,6 +232,7 @@ export const getPosts = async (req, res) => {
             }
         ]);
 
+        // If posts are fetched successfully, return them
         return res.status(200).json({
             message: "Posts fetched successfully",
             posts,
@@ -196,6 +245,7 @@ export const getPosts = async (req, res) => {
         });
     }
 };
+
 
 
 
@@ -727,14 +777,14 @@ export const verifyPayment = async (req, res) => {
 
         if (generated_signature === razorpay_signature) {
 
-            const newIsBoosted= {
+            const newIsBoosted = {
                 status: true,
                 boostPaymentId: razorpay_payment_id
             }
 
-            const updatedPost= await Post.findOneAndUpdate(
-                { _id: postId }, 
-                { $set: { isBoosted: newIsBoosted } }, 
+            const updatedPost = await Post.findOneAndUpdate(
+                { _id: postId },
+                { $set: { isBoosted: newIsBoosted } },
                 { new: true }
             );
 

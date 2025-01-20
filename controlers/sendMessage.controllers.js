@@ -134,43 +134,37 @@ export const getMessages = async (req, res) => {
 
 export const getConversations = async (req, res) => {
   try {
-    const userId = req.user._id; // Get the current user's ID
+    const userId = req.user._id;
 
-    // Aggregate all conversations where the user is a participant
     const conversations = await Conversations.aggregate([
-      // Step 1: Match conversations where the user is a participant
       {
         $match: {
-          participants: userId, // Ensures the user's ID is present in the participants array
+          participants: userId,
         },
       },
-      // Step 2: Lookup participant details from the 'users' collection
       {
         $lookup: {
-          from: "users", // The collection containing user details
-          localField: "participants", // Field in 'Conversations' collection
-          foreignField: "_id", // Field in 'users' collection
-          as: "participantDetails", // Merged participant details
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participantDetails",
         },
       },
-      // Step 3: Filter and project only necessary user details (exclude current user)
       {
         $project: {
-          _id: 0, // Exclude conversation ID from the response
+          _id: 0,
           participants: {
             $filter: {
-              input: "$participantDetails", // Filter participant details
-              as: "participant", // Alias for each element
-              cond: { $ne: ["$$participant._id", userId] }, // Exclude the current user
+              input: "$participantDetails",
+              as: "participant",
+              cond: { $ne: ["$$participant._id", userId] },
             },
           },
         },
       },
-      // Step 4: Flatten the participant details array
       {
-        $unwind: "$participants", // Flatten the array to return individual user objects
+        $unwind: "$participants",
       },
-      // Step 5: Project only required fields
       {
         $project: {
           _id: "$participants._id",
@@ -181,7 +175,6 @@ export const getConversations = async (req, res) => {
       },
     ]);
 
-    // Respond with the formatted list of user objects
     return res.status(200).json(conversations);
   } catch (error) {
     console.error("Error fetching conversations:", error);

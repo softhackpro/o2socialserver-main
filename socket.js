@@ -20,10 +20,10 @@ const userSocketMap = {}
 io.on('connection', (socket) => {
     console.log('New client connected', socket.id)
 
-    const userId = socket.handshake.query.userId
-    console.log(userId);
+    const userId = socket?.handshake?.query?.userId
+    // console.log(userId);
     if (userId !== undefined) {
-        userSocketMap[userId] = socket.id
+        userSocketMap[userId] = socket?.id
     }
 
     io.emit('getOnlineUser', Object.keys(userSocketMap))
