@@ -2,28 +2,18 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { app, server } from "./socket.js";
 import { connectDb } from "./db/index.js";
-import { app, server } from "./socket/socket.js";
 
+// Initialize environment variables
 dotenv.config();
 const port = process.env.PORT || 8000;
-const frontendurl = process.env.FRONTEND_URL
+const frontendurl = process.env.FRONTEND_URL;
 
-const corsOptions = {
-  // origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'],
-  origin: "http://localhost:5173",
-  methods: "GET, POST, PUT, PATCH, DELETE, HEAD",
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-app.use(cors(corsOptions));
-// app.use(
-//   cors({
-//     origin: ['https://reeldekho.com', 'https://www.reeldekho.com', 'reeldekho.com'] ,
-//     credentials: true,
-//   })
-// );
+// Initialize Express app
 
+// Middleware
+app.use(cors({ origin: frontendurl, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({extended: false}))
@@ -32,21 +22,28 @@ app.get("/", (req, res, next) => {
   next()
 });
 
+// Example route
+app.get("/", (req, res) => {
+  res.send("Server is running!");
+});
 
+// Import routers
 import authRouter from "./router/auth.router.js";
-import { messageRouter } from "./router/message.router.js";
+import messageRouter from "./router/message.router.js";
 import { userRoute } from "./router/user.router.js";
-import postRouter from './router/post.router.js'
+import postRouter from "./router/post.router.js";
 import { followRouter } from "./router/follow.router.js";
 import exp from "node:constants";
 
+// Setup routes
 app.use("/auth", authRouter);
 app.use("/message", messageRouter);
 app.use("/user", userRoute);
-app.use('/post', postRouter);
-app.use('/follow', followRouter);
+app.use("/post", postRouter);
+app.use("/follow", followRouter);
 
+// Start server and connect to DB
 server.listen(port, () => {
-  connectDb();
-  console.log(`Server is running on port http://localhost:${port}`);
+  connectDb(); // Connect to the database
+  console.log(`Server is running on http://localhost:${port}`);
 });

@@ -1,5 +1,34 @@
 import { Router } from "express";
-import { getsearchresult, addPost, deletePost, getPosts, updatePost, uploadFile, likePost, dislikePost, getLikes, getprofile, addComment, deleteComment, getComments, savePost, removeFromSaved, getSavedPost, getReelsById, boostpost, verifyPayment, reportPost } from "../controlers/post.controllers.js";
+import { 
+  getsearchresult, 
+  addPost, 
+  deletePost, 
+  getPosts, 
+  updatePost, 
+  uploadFile, 
+  likePost, 
+  dislikePost, 
+  getLikes, 
+  getprofile, 
+  addComment, 
+  deleteComment, 
+  getComments, 
+  savePost, 
+  removeFromSaved, 
+  getSavedPost, 
+  getReelsById, 
+  boostpost, 
+  verifyPayment, 
+  reportPost, 
+  getcategory, 
+  getcitylist, 
+  fetchfaq, 
+  fetchpagenow, 
+  fetchheader 
+} from "../controlers/post.controllers.js";
+
+// import { getsearchresult, addPost, deletePost, getPosts, updatePost, uploadFile, likePost, dislikePost, getLikes, getprofile, addComment, deleteComment, getComments, savePost, removeFromSaved, getSavedPost, getReelsById } from "../controlers/post.controllers.js";
+
 import { verifyLogin } from "../middleware/verifyLogin.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
@@ -9,6 +38,8 @@ router.post('/add', verifyLogin, addPost);
 router.put('/update', verifyLogin, updatePost);
 router.delete('/delete', verifyLogin, deletePost);
 router.get('/get', getPosts);
+router.get('/getcitylist', getcitylist);
+router.get('/getcategory', getcategory);
 router.get('/getbyid', getReelsById);
 
 router.post('/upload', verifyLogin, upload.single('file'), uploadFile);
@@ -37,4 +68,7 @@ router.post('/boost-post/verify-payment', verifyLogin, verifyPayment);
 
 router.post('/report-post', verifyLogin, reportPost)
 
+router.get('/fetchheader', fetchheader);
+router.get('/fetchfaq', fetchfaq);
+router.get('/fetchpagenow/:id', fetchpagenow);
 export default router;
