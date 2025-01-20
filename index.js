@@ -16,6 +16,11 @@ const frontendurl = process.env.FRONTEND_URL;
 app.use(cors({ origin: frontendurl, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({extended: false}))
+app.get("/", (req, res, next) => {
+  console.log(req.params.path);
+  next()
+});
 
 // Example route
 app.get("/", (req, res) => {
@@ -28,6 +33,7 @@ import messageRouter from "./router/message.router.js";
 import { userRoute } from "./router/user.router.js";
 import postRouter from "./router/post.router.js";
 import { followRouter } from "./router/follow.router.js";
+import exp from "node:constants";
 
 // Setup routes
 app.use("/auth", authRouter);

@@ -54,6 +54,14 @@ const UserSchema = new mongoose.Schema({
     following: {
         type: Number,
         default: 0
+    },
+    totalStars:{
+        type: Number,
+        default: 0
+    },
+    totalReviews: {
+        type: Number,
+        default: 0
     }
 
 }, { timestamps: true });

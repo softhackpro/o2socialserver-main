@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import { SavedPost } from "../models/savedpost.model.js";
 import { razorpayInstance } from '../config/razorpayConfig.js'
 import crypto from 'crypto'
+import { ReportedPost } from "../models/reportedPost.models.js";
 
 
 // Add Post
@@ -543,9 +544,13 @@ export const savePost = async (req, res) => {
             userId,
             postId,
         })
+        // console.log(newPost);
+
+        const post= await SavedPost.findById(newPost._id).populate('postId')
 
         return res.status(201).json({
             message: "Post saved successfully",
+            savedPost:post,
         });
     } catch (error) {
         console.error(error);
@@ -565,14 +570,14 @@ export const removeFromSaved = async (req, res) => {
                 message: "Invalid request"
             })
         }
-
-        const deletepost = await SavedPost.findByIdAndDelete(savePostId)
-
-        if (!deletepost) {
-            return res.status(404).json({
+        const postToDelete= await SavedPost.findOne({postId: savePostId})
+        
+        if(!postToDelete){
+            return res.status(400).json({
                 message: "Post not found"
             })
         }
+        const deletepost = await SavedPost.findByIdAndDelete(postToDelete._id)
 
         return res.status(200).json({
             message: "delete Post successfully"
@@ -590,46 +595,10 @@ export const getSavedPost = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        const savePost = await SavedPost.aggregate([
-            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
-            {
-                $lookup: {
-                    from: 'posts',
-                    localField: 'postId',
-                    foreignField: '_id',
-                    as: 'post'
-                }
-            },
-            { $unwind: '$post' },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'post.userId',
-                    foreignField: '_id',
-                    as: 'post.user'
-                }
-            },
-            { $unwind: '$post.user' },
-            {
-                $project: {
-                    _id: 0,
-                    postId: 1,
-                    title: '$post.title',
-                    description: '$post.description',
-                    price: '$post.price',
-                    createdAt: '$post.createdAt',
-                    updatedAt: '$post.updatedAt',
-                    userId: '$post.userId',
-                    user: {
-                        _id: '$post.user._id',
-                        fullName: '$post.user.fullName',
-                        profilePicture: '$post.user.profilePicture',
-                    }
-                }
-            }
-        ]);
-
-        if (!savePost.length) {
+        const savedPosts = await SavedPost.find({ userId: userId })
+            .populate('postId')
+            
+        if (!savedPosts.length) {
             return res.status(404).json({
                 message: "No saved post found"
             });
@@ -637,7 +606,7 @@ export const getSavedPost = async (req, res) => {
 
         return res.status(200).json({
             message: "Saved posts fetched successfully",
-            savedPosts: savePost
+            savedPosts: savedPosts
         });
     } catch (error) {
         return res.status(500).json({
@@ -762,14 +731,14 @@ export const verifyPayment = async (req, res) => {
 
         if (generated_signature === razorpay_signature) {
 
-            const newIsBoosted= {
+            const newIsBoosted = {
                 status: true,
                 boostPaymentId: razorpay_payment_id
             }
 
-            const updatedPost= await Post.findOneAndUpdate(
-                { _id: postId }, 
-                { $set: { isBoosted: newIsBoosted } }, 
+            const updatedPost = await Post.findOneAndUpdate(
+                { _id: postId },
+                { $set: { isBoosted: newIsBoosted } },
                 { new: true }
             );
 
@@ -784,5 +753,42 @@ export const verifyPayment = async (req, res) => {
     } catch (error) {
         console.error('Payment verification failed:', error);
         res.status(500).json({ error: 'Failed to verify payment' });
+    }
+}
+
+export const reportPost= async(req, res) => {
+    const { id }= req.query;
+    const { _id } = req.user
+
+    try{
+        if(!id || !_id){
+            return res.status(400).json({
+                message: "Report request is invalid!"
+            });
+        }
+
+        const alreadyReported= await ReportedPost.findOne({postId: id});
+
+        if(alreadyReported){
+            return res.status(409).json({
+                message: "Post already Reported."
+            });
+        }
+
+        const report= await ReportedPost.create({
+            userId: _id,
+            postId: id
+        });
+
+        return res.status(201).json({
+            message:"Post Successfully Reported."
+        })
+        
+    } catch(error) {
+        console.log(error);
+        res.status(500).json({
+            message: 'Server Error occured, Please try again!',
+            error: error
+        })
     }
 }
